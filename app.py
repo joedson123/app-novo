@@ -86,10 +86,10 @@ def add_calc_columns(df_sales, var_fee, fixed_fee, tax, antecip):
 init_db()
 
 st.sidebar.header("Parâmetros de Taxas")
-var_fee = st.sidebar.number_input("Taxa variável (%)", min_value=0.0, max_value=1.0, value=DEFAULT_VAR_FEE, step=0.01, format="%.2f")
-fixed_fee = st.sidebar.number_input("Taxa fixa (R$ por un.)", min_value=0.0, value=DEFAULT_FIXED_FEE, step=0.5, format="%.2f")
-tax = st.sidebar.number_input("Imposto (%)", min_value=0.0, max_value=1.0, value=DEFAULT_TAX, step=0.01, format="%.2f")
-antecip = st.sidebar.number_input("Antecipação (%)", min_value=0.0, max_value=1.0, value=DEFAULT_ANTECIP, step=0.01, format="%.2f")
+var_fee = st.sidebar.number_input("Taxa variável (%)", min_value=0.0, max_value=1.0, value=DEFAULT_VAR_FEE, step=0.01, format="%.2f", key="taxa_var")
+fixed_fee = st.sidebar.number_input("Taxa fixa (R$ por un.)", min_value=0.0, value=DEFAULT_FIXED_FEE, step=0.5, format="%.2f", key="taxa_fixa")
+tax = st.sidebar.number_input("Imposto (%)", min_value=0.0, max_value=1.0, value=DEFAULT_TAX, step=0.01, format="%.2f", key="taxa_imposto")
+antecip = st.sidebar.number_input("Antecipação (%)", min_value=0.0, max_value=1.0, value=DEFAULT_ANTECIP, step=0.01, format="%.2f", key="taxa_antecip")
 st.sidebar.markdown("---")
 st.sidebar.caption("Dica: 0.20 = 20%")
 
@@ -99,11 +99,11 @@ with tabs[0]:
     st.subheader("Cadastro de Produtos")
     col1, col2, col3 = st.columns([3,2,1])
     with col1:
-        pname = st.text_input("Nome do produto", key="prod_nome")
+        pname = st.text_input("Nome do produto", key="prod_nome_input")
     with col2:
-        pcost = st.number_input("Preço de custo (R$/un.)", min_value=0.0, step=0.5, format="%.2f", key="prod_custo")
+        pcost = st.number_input("Preço de custo (R$/un.)", min_value=0.0, step=0.5, format="%.2f", key="prod_custo_input")
     with col3:
-        if st.button("Adicionar", type="primary"):
+        if st.button("Adicionar", type="primary", key="btn_add_prod"):
             if pname.strip() == "":
                 st.error("Informe o nome do produto.")
             else:
@@ -121,9 +121,9 @@ with tabs[0]:
         st.markdown("**Excluir produto**")
         colx, coly = st.columns([3,1])
         with colx:
-            pid = st.selectbox("Selecione o produto (ID)", prods["id"].tolist())
+            pid = st.selectbox("Selecione o produto (ID)", prods["id"].tolist(), key="sel_del_prod")
         with coly:
-            if st.button("Excluir", key="del_prod"):
+            if st.button("Excluir", key="btn_del_prod"):
                 try:
                     execute("DELETE FROM products WHERE id = ?", [int(pid)])
                     st.success("Produto excluído.")
@@ -133,8 +133,8 @@ with tabs[0]:
 
 with tabs[1]:
     st.subheader("Cadastro de Datas")
-    d = st.date_input("Data", value=date.today())
-    if st.button("Adicionar data", key="add_date"):
+    d = st.date_input("Data", value=date.today(), key="data_input_add")
+    if st.button("Adicionar data", key="btn_add_date"):
         try:
             execute("INSERT INTO dates(d) VALUES(?)", [d.isoformat()])
             st.success(f"Data {d.isoformat()} adicionada!")
@@ -148,9 +148,9 @@ with tabs[1]:
     if not datas.empty:
         colx, coly = st.columns([3,1])
         with colx:
-            did = st.selectbox("Selecione a data (ID)", datas["id"].tolist())
+            did = st.selectbox("Selecione a data (ID)", datas["id"].tolist(), key="sel_del_date")
         with coly:
-            if st.button("Excluir data", key="del_date"):
+            if st.button("Excluir data", key="btn_del_date"):
                 try:
                     execute("DELETE FROM dates WHERE id = ?", [int(did)])
                     st.success("Data excluída.")
@@ -169,17 +169,17 @@ with tabs[2]:
     else:
         col1, col2, col3, col4, col5 = st.columns([2,3,2,2,3])
         with col1:
-            did = st.selectbox("Data", options=datas["id"], format_func=lambda x: datas.loc[datas["id"]==x, "d"].iloc[0])
+            did = st.selectbox("Data", options=datas["id"], format_func=lambda x: datas.loc[datas["id"]==x, "d"].iloc[0], key="sale_date_sel")
         with col2:
-            pid = st.selectbox("Produto", options=prods["id"], format_func=lambda x: prods.loc[prods["id"]==x, "name"].iloc[0])
+            pid = st.selectbox("Produto", options=prods["id"], format_func=lambda x: prods.loc[prods["id"]==x, "name"].iloc[0], key="sale_prod_sel")
         with col3:
-            qty = st.number_input("Quantidade", min_value=1, step=1, value=1)
+            qty = st.number_input("Quantidade", min_value=1, step=1, value=1, key="sale_qty_input")
         with col4:
-            unit_price = st.number_input("Preço de venda (R$/un.)", min_value=0.0, step=0.5, format="%.2f")
+            unit_price = st.number_input("Preço de venda (R$/un.)", min_value=0.0, step=0.5, format="%.2f", key="sale_price_input")
         with col5:
-            marketplace = st.text_input("Marketplace (opcional)")
+            marketplace = st.text_input("Marketplace (opcional)", key="sale_market_input")
 
-        if st.button("Adicionar venda", type="primary"):
+        if st.button("Adicionar venda", type="primary", key="btn_add_sale"):
             execute("""
                 INSERT INTO sales(date_id, product_id, qty, unit_price, marketplace)
                 VALUES(?,?,?,?,?)
@@ -188,7 +188,7 @@ with tabs[2]:
             st.experimental_rerun()
 
     sales = df("""
-        SELECT s.id, d.d AS data, p.name AS produto, p.cost As cost, s.qty, s.unit_price, s.marketplace
+        SELECT s.id, d.d AS data, p.name AS produto, p.cost AS cost, s.qty, s.unit_price, s.marketplace
         FROM sales s
         JOIN dates d ON d.id = s.date_id
         JOIN products p ON p.id = s.product_id
@@ -206,9 +206,9 @@ with tabs[2]:
     if not sales_calc.empty:
         colx, coly = st.columns([3,1])
         with colx:
-            sid = st.selectbox("Excluir venda (ID)", options=sales_calc["id"].tolist())
+            sid = st.selectbox("Excluir venda (ID)", options=sales_calc["id"].tolist(), key="sel_del_sale")
         with coly:
-            if st.button("Excluir", key="del_sale"):
+            if st.button("Excluir", key="btn_del_sale"):
                 execute("DELETE FROM sales WHERE id = ?", [int(sid)])
                 st.success("Venda excluída.")
                 st.experimental_rerun()
@@ -234,7 +234,7 @@ with tabs[3]:
         st.dataframe(resumo, use_container_width=True, hide_index=True)
 
         csv = resumo.to_csv(index=False).encode("utf-8")
-        st.download_button("Baixar resumo (CSV)", csv, "resumo_diario.csv", "text/csv")
+        st.download_button("Baixar resumo (CSV)", csv, "resumo_diario.csv", "text/csv", key="dl_resumo_csv")
 
 with tabs[4]:
     st.subheader("Dashboard")
@@ -251,17 +251,17 @@ with tabs[4]:
         colf1, colf2, colf3 = st.columns(3)
         with colf1:
             produtos = ["(todos)"] + sorted(sales_calc["produto"].unique().tolist())
-            f_prod = st.selectbox("Produto", produtos)
+            f_prod = st.selectbox("Produto", produtos, key="dash_prod_sel")
         with colf2:
             markets = ["(todos)"] + sorted([m for m in sales_calc["marketplace"].dropna().unique().tolist()])
-            f_market = st.selectbox("Marketplace", markets)
+            f_market = st.selectbox("Marketplace", markets, key="dash_market_sel")
         with colf3:
             sales_calc["data"] = pd.to_datetime(sales_calc["data"]).dt.date
             if not sales_calc.empty:
                 dmin, dmax = sales_calc["data"].min(), sales_calc["data"].max()
             else:
                 dmin, dmax = date.today(), date.today()
-            drange = st.date_input("Período", value=(dmin, dmax))
+            drange = st.date_input("Período", value=(dmin, dmax), key="dash_period_sel")
 
         df_f = sales_calc.copy()
         if f_prod != "(todos)":
@@ -281,10 +281,10 @@ with tabs[4]:
             c1, c2 = st.columns(2)
             with c1:
                 kpi_fat = resumo["faturamento"].sum()
-                st.metric("Faturamento (período)", f"R$ {kpi_fat:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+                st.metric("Faturamento (período)", f"R$ {kpi_fat:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."), key="dash_kpi_fat")
             with c2:
                 kpi_luc = resumo["lucro"].sum()
-                st.metric("Lucro (período)", f"R$ {kpi_luc:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+                st.metric("Lucro (período)", f"R$ {kpi_luc:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."), key="dash_kpi_luc")
 
             chart_data = resumo.rename(columns={"data":"Data","faturamento":"Faturamento","lucro":"Lucro"})
             chart = alt.Chart(chart_data).transform_fold(
@@ -302,7 +302,7 @@ with tabs[5]:
     st.subheader("Relatórios — Produto mais vendido do mês")
 
     sales = df("""
-        SELECT d.d As data, p.name AS produto, p.cost, s.qty, s.unit_price, s.marketplace
+        SELECT d.d AS data, p.name AS produto, p.cost, s.qty, s.unit_price, s.marketplace
         FROM sales s
         JOIN dates d ON d.id = s.date_id
         JOIN products p ON p.id = s.product_id
@@ -318,23 +318,20 @@ with tabs[5]:
         col1, col2, col3 = st.columns(3)
         with col1:
             anos = sorted(sales["ano"].unique().tolist())
-            f_ano = st.selectbox("Ano", anos, index=len(anos)-1 if anos else 0)
+            f_ano = st.selectbox("Ano", anos, index=len(anos)-1 if anos else 0, key="rep_ano_sel")
         with col2:
             meses = sorted(sales.loc[sales["ano"]==f_ano, "mes"].unique().tolist())
             mes_nome = {1:"Jan",2:"Fev",3:"Mar",4:"Abr",5:"Mai",6:"Jun",7:"Jul",8:"Ago",9:"Set",10:"Out",11:"Nov",12:"Dez"}
-            f_mes = st.selectbox("Mês", meses, format_func=lambda m: mes_nome.get(m, str(m)))
+            f_mes = st.selectbox("Mês", meses, format_func=lambda m: mes_nome.get(m, str(m)), key="rep_mes_sel")
         with col3:
             markets = ["(todos)"] + sorted([m for m in sales["marketplace"].dropna().unique().tolist()])
-            f_market = st.selectbox("Marketplace", markets)
+            f_market = st.selectbox("Marketplace", markets, key="rep_market_sel")
 
         use = sales[(sales["ano"]==f_ano) & (sales["mes"]==f_mes)].copy()
         if f_market != "(todos)":
             use = use[use["marketplace"] == f_market]
 
-        def add_calc_columns_local(df_sales, var_fee, fixed_fee, tax, antecip):
-            return add_calc_columns(df_sales, var_fee, fixed_fee, tax, antecip)
-
-        use_calc = add_calc_columns_local(use, var_fee, fixed_fee, tax, antecip)
+        use_calc = add_calc_columns(use, var_fee, fixed_fee, tax, antecip)
 
         if use_calc.empty:
             st.warning("Nenhuma venda para os filtros escolhidos.")
@@ -349,17 +346,17 @@ with tabs[5]:
 
             c1, c2, c3 = st.columns(3)
             with c1:
-                st.metric("Produto mais vendido (qtd)", top_qty["produto"])
+                st.metric("Produto mais vendido (qtd)", top_qty["produto"], key="rep_metric_prod")
             with c2:
-                st.metric("Quantidade vendida", f"{int(top_qty['qtd_total'])}")
+                st.metric("Quantidade vendida", f"{int(top_qty['qtd_total'])}", key="rep_metric_qtd")
             with c3:
-                st.metric("Lucro (produto campeão)", f"R$ {top_qty['lucro']:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.'))
+                st.metric("Lucro (produto campeão)", f"R$ {top_qty['lucro']:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.'), key="rep_metric_luc")
 
             st.markdown("### Ranking de produtos (mês filtrado)")
             st.dataframe(by_qty.reset_index(drop=True), use_container_width=True)
 
             st.download_button("Baixar ranking (CSV)", by_qty.to_csv(index=False).encode("utf-8"),
-                               f"ranking_produtos_{f_ano}_{f_mes}.csv", "text/csv")
+                               f"ranking_produtos_{f_ano}_{f_mes}.csv", "text/csv", key="dl_ranking_csv")
 
             st.markdown("### Resumo diário do mês (faturamento e lucro)")
             resumo = (use_calc.groupby("data", as_index=False)
