@@ -365,4 +365,7 @@ with tabs[5]:
                       .sort_values("data"))
             st.dataframe(resumo, use_container_width=True, hide_index=True)
 
-            st.caption("💡 Lembrete: cadastre vendas **todos os dias** — várias linhas com a mesma data representam vários produtos vendidos naquele dia, inclusive por marketplace.")
+            st.caption("💡 Lembrete: cadastre vendas **todos os dias** — várias linhas com a mesma data representam vários produtos vendidos naquele dia, inclusive por marketplace.") 
+git add .
+git commit -m "fix: keys únicas nos widgets + sqlite em /mount/tmp"
+git push
